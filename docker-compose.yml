@@ -16,7 +16,7 @@ services:
       - ./test:/app/test
       - ./scripts:/app/scripts
       - ./.env:/app/.env
-      - ${MODEL_DIR:-./models}:/models  # 使用默认值处理未定义的环境变量
+      - ${MODEL_DIR:-./models}:/models # 使用默认值处理未定义的环境变量
     ports:
       - "5050:5050"
     networks:
@@ -44,7 +44,11 @@ services:
     command: uv run --no-dev uvicorn server.main:app --host 0.0.0.0 --port 5050 --reload
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5050/api/system/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:5050/api/system/health || exit 1",
+        ]
       interval: 30s
       timeout: 15s
       retries: 8
@@ -105,19 +109,21 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-  # endregion neo4j
 
   etcd:
     container_name: milvus-etcd-dev
-    image: quay.io/coreos/etcd:v3.5.5
+    image: ${ETCD_IMAGE:-bitnami/etcd:3.5.5}
     environment:
       - ETCD_AUTO_COMPACTION_MODE=revision
       - ETCD_AUTO_COMPACTION_RETENTION=1000
       - ETCD_QUOTA_BACKEND_BYTES=4294967296
       - ETCD_SNAPSHOT_COUNT=50000
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_DATA_DIR=/bitnami/etcd
+      - ALLOW_NONE_AUTHENTICATION=yes
     volumes:
-      - ./docker/volumes/milvus/etcd:/etcd
-    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+      - ./docker/volumes/milvus/etcd:/bitnami/etcd
     healthcheck:
       test: ["CMD", "etcdctl", "endpoint", "health"]
       interval: 60s
@@ -234,8 +240,7 @@ services:
     environment:
       MINERU_MODEL_SOURCE: local
     entrypoint: mineru-api
-    command:
-      --host 0.0.0.0
+    command: --host 0.0.0.0
       --port 30001
     ulimits:
       memlock: -1
@@ -266,7 +271,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['0']
+              device_ids: ["0"]
               capabilities: [gpu]
     networks:
       - app-network

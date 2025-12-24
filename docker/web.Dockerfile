@@ -1,5 +1,5 @@
 # 开发阶段
-FROM node:20-alpine AS development
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/node:22-alpine AS development
 WORKDIR /app
 
 ARG http_proxy
@@ -30,7 +30,7 @@ EXPOSE 5173
 # 启动开发服务器的命令在 docker-compose 文件中定义
 
 # 生产阶段
-FROM node:20-alpine AS build-stage
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/node:22-alpine AS build-stage
 WORKDIR /app
 
 # 安装 pnpm
@@ -48,7 +48,7 @@ COPY ./web .
 RUN pnpm run build
 
 # 生产环境运行阶段
-FROM nginx:alpine AS production
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/nginx:alpine AS production
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
